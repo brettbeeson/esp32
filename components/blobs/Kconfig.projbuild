@@ -1,0 +1,30 @@
+
+menu "Blobs"
+   
+    config MEMORYSAVER_MEASUREMENTS
+        int "Memory Saver Measurements"
+        default 5
+        range 1 100
+        help 
+        Such as "temperature" or "humidity"
+        
+    config MEMORYSAVER_SAMPLES
+        int "Memory Saver Samples"
+        default 30
+        range 1 100
+        help
+         Number of samples of a measurement to allow to store usually before publishing
+    
+    config BLOB_QUEUE_0_LENGTH
+        int "Length of the Readings queue (0)"
+        default 30
+        range 1 100
+    
+    config BLOB_QUEUE_1_LENGTH
+        int "Length of the Readings queue (1)"
+        default 30
+        range 1 100
+    
+
+
+endmenu

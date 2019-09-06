@@ -1,0 +1,49 @@
+{
+    "version": "0.1.0",
+    "command": "/bin/bash",
+    "args": ["-c"],
+    "isShellCommand": true,
+    "showOutput": "always",
+    "suppressTaskName": true,
+    "options": {
+        "cwd": "${workspaceRoot}",
+        "env": { 
+            "IDF_PATH" : "/home/bbeeson/esp/esp-idf", 
+            "PATH" : "${env:PATH}:/home/bbeeson/esp/xtensa-esp32-elf/bin" 
+        }
+    },
+    "tasks": [
+        {
+            "taskName": "build app",
+            "args": ["make -j8 app app-flash"],
+            "isBuildCommand": true,
+            "problemMatcher": {
+                "owner": "cpp",
+                "fileLocation": "absolute",
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
+                }
+            }
+        },
+        {
+            "taskName": "clean app",
+            "args": ["make app-clean"]
+        },
+        {
+			"taskName": "Monitor",
+			"suppressTaskName": true,
+			"args": [
+				"python  /home/bbeeson/esp/esp-idf/tools/idf_monitor.py --port /dev/ttyUSB0 --baud 115200 build/power_save.elf"
+			]
+		},
+        {
+            "taskName": "flash app",
+            "args": ["make app-flash"]
+        }
+    ]
+}

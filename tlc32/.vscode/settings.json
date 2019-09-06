@@ -1,0 +1,17 @@
+{
+    "files.associations": {
+        "task.h": "c",
+        "arduino.h": "c",
+        "esp32-hal.h": "c",
+        "esp32-hal-log.h": "c",
+        "esp_log.h": "c",
+        "typeinfo": "cpp",
+        "array": "cpp",
+        "deque": "cpp",
+        "unordered_map": "cpp",
+        "vector": "cpp",
+        "initializer_list": "cpp",
+        "string_view": "cpp"
+    },
+    "git.ignoreLimitWarning": true
+}

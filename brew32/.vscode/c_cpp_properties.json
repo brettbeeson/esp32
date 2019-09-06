@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceRoot}/main/**",
+                "${workspaceRoot}/build/include/",
+                "${env:IDF_PATH}/components/*",
+                "${env:IDF_PATH}/components/**",
+                "${env:IDF_PATH}/components/**/**",
+                "${env:IDF_PATH}/components/**/**/**"
+
+            ],
+            "browse": {
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": ""
+            },
+            "intelliSenseMode": "gcc-x64"
+        }
+    ],
+    "version": 4
+}

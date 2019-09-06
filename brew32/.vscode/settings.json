@@ -1,0 +1,14 @@
+{
+    "files.associations": {
+        "task.h": "c",
+        "arduino.h": "c",
+        "array": "cpp",
+        "deque": "cpp",
+        "unordered_map": "cpp",
+        "vector": "cpp",
+        "initializer_list": "cpp",
+        "string_view": "cpp",
+        "system_error": "cpp",
+        "thread": "cpp"
+    }
+}

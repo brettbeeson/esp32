@@ -1,0 +1,71 @@
+menu "Battery Temperature Sensor"
+
+    config BTS_SAMPLE_PERIOD_SEC
+    int "Sample Period (s)"
+    default 60
+
+    config BTS_BULK_SEND
+    int "Bulk send mulitpler"
+    default 10
+
+    config BTS_WIFI_SSID
+    string "Wifi Network"
+    default nickoff
+
+    config BTS_WIFI_PASSWORD
+    string "Wifi Password"
+    default ""
+
+    choice BTS_MAX_CPU_FREQ
+        prompt "Maximum CPU frequency"
+        default BTS_MAX_CPU_FREQ_80
+        help
+            Maximum CPU frequency to use for dynamic frequency scaling.
+
+        config BTS_MAX_CPU_FREQ_80
+            bool "80 MHz"
+        config BTS_MAX_CPU_FREQ_160
+            bool "160 MHz"
+        config BTS_MAX_CPU_FREQ_240
+            bool "240 MHz"
+    endchoice
+
+    config BTS_MAX_CPU_FREQ_MHZ
+        int
+        default 80 if BTS_MAX_CPU_FREQ_80
+        default 160 if BTS_MAX_CPU_FREQ_160
+        default 240 if BTS_MAX_CPU_FREQ_240
+
+    choice BTS_MIN_CPU_FREQ
+        prompt "Minimum CPU frequency"
+        default BTS_MIN_CPU_FREQ_10M
+        help
+            Minimum CPU frequency to use for dynamic frequency scaling.
+            Should be set to XTAL frequency or XTAL frequency divided by integer.
+
+        config BTS_MIN_CPU_FREQ_40M
+            bool "40 MHz (use with 40MHz XTAL)"
+            depends on ESP32_XTAL_FREQ_40 || ESP32_XTAL_FREQ_AUTO
+        config BTS_MIN_CPU_FREQ_20M
+            bool "20 MHz (use with 40MHz XTAL)"
+            depends on ESP32_XTAL_FREQ_40 || ESP32_XTAL_FREQ_AUTO
+        config BTS_MIN_CPU_FREQ_10M
+            bool "10 MHz (use with 40MHz XTAL)"
+            depends on ESP32_XTAL_FREQ_40 || ESP32_XTAL_FREQ_AUTO
+        config BTS_MIN_CPU_FREQ_26M
+            bool "26 MHz (use with 26MHz XTAL)"
+            depends on ESP32_XTAL_FREQ_26 || ESP32_XTAL_FREQ_AUTO
+        config BTS_MIN_CPU_FREQ_13M
+            bool "13 MHz (use with 26MHz XTAL)"
+            depends on ESP32_XTAL_FREQ_26 || ESP32_XTAL_FREQ_AUTO
+    endchoice
+
+    config BTS_MIN_CPU_FREQ_MHZ
+        int
+        default 40 if BTS_MIN_CPU_FREQ_40M
+        default 20 if BTS_MIN_CPU_FREQ_20M
+        default 10 if BTS_MIN_CPU_FREQ_10M
+        default 26 if BTS_MIN_CPU_FREQ_26M
+        default 13 if BTS_MIN_CPU_FREQ_13M
+
+endmenu
