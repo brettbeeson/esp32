@@ -4,3 +4,5 @@ cmake_minimum_required(VERSION 3.5)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(tlc32)
+set(COMPONENT_REQUIRES arduino-esp32 fatfs bblib timelapse)
+

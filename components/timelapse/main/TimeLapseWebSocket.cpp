@@ -1,12 +1,13 @@
 #include "TimeLapseWebSocket.h"
 #include "TimeLapseCamera.h"
 #include "BBEsp32Lib.h"
-#include <ArduinoJson.h>
+#include <ArduinoJson-v6.12.0.hpp>
 
 #include <stdio.h>
 
 using namespace std;
 using namespace bbesp32lib;
+using namespace ArduinoJson;
 
 TimeLapseWebSocket::TimeLapseWebSocket(const String& url, TimeLapseCamera& tlc, int port):
   AsyncWebSocket(url),
@@ -49,7 +50,7 @@ void TimeLapseWebSocket::onWebSocketEvent(AsyncWebSocket * serverBase, AsyncWebS
       } else {
         char buff[3];
         for (size_t i = 0; i < info->len; i++) {
-          sprintf(buff, "%02x ", (uint8_t) data[i]);
+          sprintf(buff, "%02x", (uint8_t) data[i]);
           msg += buff ;
         }
       }
@@ -72,7 +73,7 @@ void TimeLapseWebSocket::onWebSocketEvent(AsyncWebSocket * serverBase, AsyncWebS
       } else {
         char buff[3];
         for (size_t i = 0; i < info->len; i++) {
-          sprintf(buff, "%02x ", (uint8_t) data[i]);
+          sprintf(buff, "%02x", (uint8_t) data[i]);
           msg += buff ;
         }
       }

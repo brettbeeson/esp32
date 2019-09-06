@@ -1,12 +1,14 @@
 #include "FSEditor.h"
-#include "BBEsp32Lib.h"
 #include <SD_MMC.h>
-#include <ArduinoJson.h>
+#include <ArduinoJson-v6.12.0.hpp>
 #include <FS.h>
+
+#include "BBEsp32Lib.h"
 
 #define MAXLENGTH_FILEPATH 128
 
 using namespace bbesp32lib;
+using namespace ArduinoJson;
 
 const char *excludeListFileFS = "/.exclude.files";
 

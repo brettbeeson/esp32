@@ -27,7 +27,7 @@
 #include <time.h>
 #include <vector>
 
-#include "camera.h" // testing only
+//#include "camera.h" // testing only
 
 #include "wifi_prov.h"
 #include <esp_wifi.h>
@@ -217,6 +217,7 @@ void setup() {
       throw std::runtime_error("Failed to start SD_MMC filesystem. Dat bad.");
     }
 
+    /*
     if (BASIC_CAM_ONLY) {
       ESP_LOGI(TAG, "BASIC_CAM_ONLY active");
       ESP_ERROR_CHECK(my_camera_init());
@@ -226,6 +227,7 @@ void setup() {
         vTaskDelay(pdMS_TO_TICKS(10000));
       }
     }
+    */
 
     //
     // Configure cam
@@ -247,8 +249,8 @@ void setup() {
     cam._wifiSSID = "NetComm 0405";
     cam._wifiPassword = "wimepuderi";
     cam._uploadMode = TimeLapseCamera::Off;
-    cam.setPsMode(true);
-    cam.setTakingPhotos(true);
+    //cam.setPsMode(true);
+    ////cam.setTakingPhotos(true);
 
     //
     // Back to sleep (must be after cam start)

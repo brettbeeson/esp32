@@ -732,7 +732,7 @@ bool waitForNTP(int retries) {
   int retry = 0;
 
   vTaskDelay(1000 / portTICK_PERIOD_MS);
-  while (!timeIsValid() && retries < retries) {
+  while (!timeIsValid() && retry < retries) {
     ESP_LOGI(TAG, "Waiting for NTP time to be set... (%d/%d)", retry, retries);
     vTaskDelay(1000 / portTICK_PERIOD_MS);
   }

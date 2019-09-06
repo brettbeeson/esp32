@@ -1,6 +1,3 @@
-static const char *TAG = "TimeLapseCamera";
-#undef LOG_LOCAL_LEVEL
-#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #define INCLUDE_pcGetTaskName 1
 #include "TimeLapseCamera.h"
 #include "BBEsp32Lib.h"
@@ -9,7 +6,6 @@ static const char *TAG = "TimeLapseCamera";
 #include "SD_MMC.h"
 #include "TimeLapseWebServer.h"
 #include "esp_camera.h"
-#include "esp_log.h"
 #include <freertos/task.h>
 #include <fstream>
 #include <sys/stat.h>
@@ -85,7 +81,7 @@ uint32_t TimeLapseCamera::sleepy() {
   if (!_sleepEnabled)
     return false;
   if (timeinfo.tm_year < (2016 - 1900)) {
-    ESP_LOGI(TAG, "System time not set.");
+    ESP_LOGI(TL_TAG, "System time not set.");
   }
 
   // Find seconds until next o'clock
@@ -96,11 +92,11 @@ uint32_t TimeLapseCamera::sleepy() {
   msToSleep = (uint32_t)(difftime(now, mktime(&nextHour)) * 1000.0f);
 
   if (_sleepHours[timeinfo.tm_hour]) {
-    ESP_LOGI(TAG, "Sleepy. hourNow: %d now: %s secondsToSleep: %ds", timeinfo.tm_hour,
+    ESP_LOGI(TL_TAG, "Sleepy. hourNow: %d now: %s secondsToSleep: %ds", timeinfo.tm_hour,
              strftime_buf, (int)msToSleep);
     return msToSleep;
   } else {
-    ESP_LOGI(TAG, "Not Sleepy. hourNow: %d now: %s secondsToSleep: %ds",
+    ESP_LOGI(TL_TAG, "Not Sleepy. hourNow: %d now: %s secondsToSleep: %ds",
              timeinfo.tm_hour, strftime_buf, (int)msToSleep);
     return 0;
   }
@@ -119,7 +115,7 @@ void TimeLapseCamera::initCam() {
   }
   struct stat sb;
   String saveFolderBare = slash("/", _saveFolder, "").c_str();
-  ESP_LOGV(TAG, "initCam saveFolder:%s", saveFolderBare.c_str());
+  ESP_LOGV(TL_TAG, "initCam saveFolder:%s", saveFolderBare.c_str());
   if (!(stat(saveFolderBare.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode))) {
     if (mkdir(saveFolderBare.c_str(), S_IRWXU | S_IRWXG | S_IRWXO) != 0) {
       String e = String("Couldn't create folder at ") + saveFolderBare;
@@ -127,7 +123,7 @@ void TimeLapseCamera::initCam() {
     }
   } else {
     String e = String("Folder exists at ") + saveFolderBare;
-    ESP_LOGV(TAG, "%s", e.c_str());
+    ESP_LOGV(TL_TAG, "%s", e.c_str());
   }
   // power up the camera if PWDN pin is defined
   if (PWDN_GPIO_NUM != -1) {
@@ -168,7 +164,7 @@ void TimeLapseCamera::initCam() {
   /* if (!psramFound()) {
     // oh no, we're too littlely
     // throw std::runtime_error("No psramFound. Not tested without it!");
-    ESP_LOGW(TAG,
+    ESP_LOGW(TL_TAG,
              "No PSRAM found. Might fail. Check menuconfig and enable PSRAM.");
   }
   */
@@ -183,7 +179,7 @@ void TimeLapseCamera::initCam() {
     throw std::runtime_error(err.c_str());
   }
 
-  ESP_LOGI(TAG, "esp_camera_init ok. Size: %d Used %dkB Psram", _frameSize,
+  ESP_LOGI(TL_TAG, "esp_camera_init ok. Size: %d Used %dkB Psram", _frameSize,
            psramStartkB - (ESP.getFreePsram() / 1024));
   _camInitialised = true;
 }
@@ -193,7 +189,7 @@ void TimeLapseCamera::deinitCam() {
   if (!_camInitialised)
     return;
   if ((camErr = esp_camera_deinit()) != ESP_OK) {
-    ESP_LOGE(TAG, "esp_camera_deinit() failed: %d", camErr); // esp_err_t type?
+    ESP_LOGE(TL_TAG, "esp_camera_deinit() failed: %d", camErr); // esp_err_t type?
   }
   _camInitialised = false;
 }
@@ -201,7 +197,7 @@ void TimeLapseCamera::deinitCam() {
 void TimeLapseCamera ::stopTakingPhotos() { _camTakePhotos = false; }
 void TimeLapseCamera ::startTakingPhotos() {
   if (!_camTakePhotos) {
-    ESP_LOGV(TAG, "startTakingPhotos");
+    ESP_LOGV(TL_TAG, "startTakingPhotos");
     _camTakePhotos = true;
   }
 }
@@ -241,12 +237,12 @@ void TimeLapseCamera::takeSinglePhoto() {
   static esp_pm_lock_handle_t freq_handle = 0;
   static esp_pm_lock_handle_t apb_handle = 0;
   if (!nosleep_handle) {
-    ESP_LOGE(TAG, "Creating Lock");
+    ESP_LOGE(TL_TAG, "Creating Lock");
     ESP_ERROR_CHECK(esp_pm_lock_create(ESP_PM_CPU_FREQ_MAX, 0, "cam1", &freq_handle));
     ESP_ERROR_CHECK(esp_pm_lock_create(ESP_PM_APB_FREQ_MAX, 0, "cam2", &apb_handle));
     ESP_ERROR_CHECK(esp_pm_lock_create(ESP_PM_NO_LIGHT_SLEEP, 0, "cam3", &nosleep_handle));
   }
-  //ESP_LOGE(TAG, "TEMP: TURN OFF PS BEFORE CAMERA");
+  //ESP_LOGE(TL_TAG, "TEMP: TURN OFF PS BEFORE CAMERA");
   //ESP_ERROR_CHECK(esp_pm_lock_acquire(nosleep_handle));
   //ESP_ERROR_CHECK(esp_pm_lock_acquire(apb_handle));
   //ESP_ERROR_CHECK(esp_pm_lock_acquire(freq_handle));
@@ -259,9 +255,9 @@ void TimeLapseCamera::takeSinglePhoto() {
 
   initCam();
 
-  ESP_LOGV(TAG, "Taking a photo...");
+  ESP_LOGV(TL_TAG, "Taking a photo...");
   f = esp_camera_fb_get(); // 300ms
-  ESP_LOGV(TAG, "Got a photo. Saving...");
+  ESP_LOGV(TL_TAG, "Got a photo. Saving...");
   if (!f) {
     assert(0);
     
@@ -280,14 +276,15 @@ void TimeLapseCamera::takeSinglePhoto() {
   } else {
     // Sequence. No time is available
     char ibuf[8 + 1]; // 9, 999, 999 + 1 for \0 is 3 years @ 10s
-    snprintf(ibuf, 8, "%06d", ++TimeLapseCameraFileNumber);
+    printf("WARNNNNNNNN\n\n\\n at %s",__FILE__);
+    //snprintf(ibuf, 8, "%06d", ++TimeLapseCameraFileNumber);
     filename = _saveFolder + _series + String(ibuf) + ".jpg";
     // Prepend (aa,ab,etc) to avoid overwriting sequences
     // If we get to "zz", start overwriting
     // Check if destination file exists before renaming
     struct stat st;
 
-    // ESP_LOGV(TAG,"stat = %d",stat(filename.c_str(), &st));
+    // ESP_LOGV(TL_TAG,"stat = %d",stat(filename.c_str(), &st));
 
     while ((stat(filename.c_str(), &st) == 0) && (_series != "zz")) {
       filename = _saveFolder + nextSeries() + String(ibuf) + ".jpg";
@@ -296,7 +293,7 @@ void TimeLapseCamera::takeSinglePhoto() {
   // To avoid overwriting, add a prefix (A-Z). This is easily stripped out
   // in post-processing, cos its a non-digit
 
-  ESP_LOGV(TAG, "Saving %s (%dkB)", filename.c_str(), f->len / 1024);
+  ESP_LOGV(TL_TAG, "Saving %s (%dkB)", filename.c_str(), f->len / 1024);
 
   // \todo Prevent other tasks readings a half-written file
 
@@ -309,12 +306,12 @@ void TimeLapseCamera::takeSinglePhoto() {
   
 
   if ((file = fopen(filename.c_str(), "w"))) { // 900ms
-    ESP_LOGI(TAG, "Saving: fn:%s (%dkB) (%dx%d)", filename.c_str(),
+    ESP_LOGI(TL_TAG, "Saving: fn:%s (%dkB) (%dx%d)", filename.c_str(),
              (int)(f->len / 1000), f->width, f->height);
     bytesWritten = fwrite(f->buf, 1, f->len, file);
-    // ESP_LOGV(TAG,"T2.2 Wrote");
+    // ESP_LOGV(TL_TAG,"T2.2 Wrote");
     if (bytesWritten != f->len) {
-      ESP_LOGW(TAG, "Only wrote: %dB of %dB to %s", (int)bytesWritten, (int)f->len,
+      ESP_LOGW(TL_TAG, "Only wrote: %dB of %dB to %s", (int)bytesWritten, (int)f->len,
                filename.c_str());
     }
   } else {
@@ -326,7 +323,7 @@ void TimeLapseCamera::takeSinglePhoto() {
   fclose(file);
   file = NULL;
   esp_camera_fb_return(f);
-  ESP_LOGE(TAG, "TEMP: TURN ON PS AFTER CAMERA");
+  ESP_LOGE(TL_TAG, "TEMP: TURN ON PS AFTER CAMERA");
  // ESP_ERROR_CHECK(esp_pm_lock_release(nosleep_handle));
   //ESP_ERROR_CHECK(esp_pm_lock_release(apb_handle));
   //ESP_ERROR_CHECK(esp_pm_lock_release(freq_handle));
@@ -340,7 +337,7 @@ void TimeLapseCamera::takeSinglePhoto() {
 void TimeLapseCamera::takeSinglePhotoAndDiscard() {
   camera_fb_t *fb = NULL;
 
-  ESP_LOGE(TAG, "TEMP RETURN");
+  ESP_LOGE(TL_TAG, "TEMP RETURN");
 
   initCam();
 
@@ -381,7 +378,7 @@ bool TimeLapseCamera::uploadPhotos(int maxFiles, int maxSeconds) {
   // todo add setSaveFolder(asdf) to do this
   //
   if (!_filesys.exists(localDir)) {
-    ESP_LOGI(TAG, "mkdir %s", localDir.c_str());
+    ESP_LOGI(TL_TAG, "mkdir %s", localDir.c_str());
     _filesys.mkdir(localDir);
   }
   // Get all to enable sort and get eariliest, even if maxFiles is set - do that
@@ -395,7 +392,7 @@ bool TimeLapseCamera::uploadPhotos(int maxFiles, int maxSeconds) {
   Serial.flush();
 */
 
-  ESP_LOGI(TAG, "uploadPhotos: ls:%ums localDir:%s (%u files) remoteDir:%s",
+  ESP_LOGI(TL_TAG, "uploadPhotos: ls:%ums localDir:%s (%u files) remoteDir:%s",
            (uint32_t)(millis() - s), localDir.c_str(),
            (uint32_t)filesToUpload.size(), remoteDir.c_str());
 
@@ -418,19 +415,19 @@ bool TimeLapseCamera::uploadPhotos(int maxFiles, int maxSeconds) {
     s = millis();
     _ftp->uploadFile(localDirSlashed + filesToUpload[i],
                      remoteDir + filesToUpload[i]);
-    // ESP_LOGV(TAG,"upload took %lums", millis() - s);
+    // ESP_LOGV(TL_TAG,"upload took %lums", millis() - s);
     _lastImageUploaded = filesToUpload[i];
     s = millis();
     if (_deleteOnUpload) {
       String fn = localDirSlashed + filesToUpload[i];
       if (remove(fn.c_str()) != 0) {
         perror("Error deleting file");
-        ESP_LOGW(TAG, "Couldn't remove: %s", fn.c_str());
+        ESP_LOGW(TL_TAG, "Couldn't remove: %s", fn.c_str());
       }
     }
-    // ESP_LOGV(TAG,"delete took %lums", millis() - s);
+    // ESP_LOGV(TL_TAG,"delete took %lums", millis() - s);
     if (++nFiles > maxFiles || millis() / 1000 > endSeconds) {
-      ESP_LOGI(TAG, "uploadPhotos: returning early _upload:%d nFiles:%d of %d",
+      ESP_LOGI(TL_TAG, "uploadPhotos: returning early _upload:%d nFiles:%d of %d",
                _uploadMode, nFiles, maxFiles);
       _wiFiUsers--;
       return false; // more possible photos to upload
@@ -460,7 +457,7 @@ bool TimeLapseCamera::isCharged() {
 
   _lastBatteryCheckMs = millis();
 
-  // ESP_LOGI(TAG,"chargingForMs: %juminutes, atmBatteryCharging: %ju", (uintmax_t)
+  // ESP_LOGI(TL_TAG,"chargingForMs: %juminutes, atmBatteryCharging: %ju", (uintmax_t)
   // _chargingForMs, (uintmax_t)bcAtm);
   return (_chargingForMs > BATTERY_IS_CHARGED_PERIOD_MS);
 }
@@ -473,8 +470,8 @@ void TimeLapseCamera::taskStates() {
   // char rts[1000];
   // vTaskList(tl);
   // vTaskGetRunTimeStats(rts);
-  // ESP_LOGV(TAG,"cth: %d nt:%d", (int) cth, (int) nt);
-  // ESP_LOGV(TAG,"tl: %s", tl);
+  // ESP_LOGV(TL_TAG,"cth: %d nt:%d", (int) cth, (int) nt);
+  // ESP_LOGV(TL_TAG,"tl: %s", tl);
   // Serial.printf("**********RTS**************\n%s", rts);
   // Serial.printf("**********TL**************\n%s", tl);
   vTaskPrintRunTimeStats();
@@ -502,7 +499,7 @@ String TimeLapseCamera::toString() {
   if (doc.size() == 0)
     return "";
   if (serializeJson(doc, jsonString) == 0) {
-    ESP_LOGE(TAG, "Failed to serialize");
+    ESP_LOGE(TL_TAG, "Failed to serialize");
     return "";
   } else {
     return jsonString;
@@ -516,8 +513,8 @@ bool TimeLapseCamera::load() {
   applyConfig(doc);
   return true;
 }
-
-void TimeLapseCamera::applyConfig(const DynamicJsonDocument &data) {
+/*
+inline void TimeLapseCamera::applyConfig(const DynamicJsonDocument &data) {
   // Must use containsKey, as (bool) data["saveFolder"] == false (why?)
   // Serial.println("applyConfig with:");
   // serializeJson(data, Serial);
@@ -534,7 +531,7 @@ void TimeLapseCamera::applyConfig(const DynamicJsonDocument &data) {
   if (sleepChanged || wakeChanged) {
     for (int h = 0; h < 24; h++) {
       _sleepHours[h] = (h < _wakeAt) || (h >= _sleepAt);
-      // ESP_LOGV(TAG,"h: %d sleep:%d", h, _sleepHours[h]);
+      // ESP_LOGV(TL_TAG,"h: %d sleep:%d", h, _sleepHours[h]);
     }
   }
   setIfValid(_takePhotoPeriodS, "takePhotoPeriodS", 1, 3600, data);
@@ -545,7 +542,7 @@ void TimeLapseCamera::applyConfig(const DynamicJsonDocument &data) {
 
   if (setIfValid(_frameSize, "frameSize", FRAMESIZE_QQVGA, FRAMESIZE_UXGA,
                  data)) {
-    ESP_LOGV(TAG, "Setting cam with framesize %d _camTakePhotos: %d", (int)_frameSize,
+    ESP_LOGV(TL_TAG, "Setting cam with framesize %d _camTakePhotos: %d", (int)_frameSize,
              _camTakePhotos);
     bool takingPhotos = _camTakePhotos;
     _camTakePhotos = false; // stop to avoid re-initing
@@ -560,7 +557,7 @@ void TimeLapseCamera::applyConfig(const DynamicJsonDocument &data) {
               data["ftpPassword"].as<String>());
   }
 }
-
+*/
 DynamicJsonDocument TimeLapseCamera::getConfig() {
 
   DynamicJsonDocument data(JSON_OBJECT_SIZE(30));
@@ -604,149 +601,13 @@ DynamicJsonDocument TimeLapseCamera::readConfigFromFile() {
   DeserializationError error = deserializeJson(doc, file);
   file.close(); // ~File does not close
   if (error) {
-    ESP_LOGE(TAG, "Failed to read config file: %s error: %s", _configFilename.c_str(),
+    ESP_LOGE(TL_TAG, "Failed to read config file: %s error: %s", _configFilename.c_str(),
              error.c_str());
   }
   return doc; // empty doc if error
 }
 
-//
-// Saves the configuration to a file
-//
-bool TimeLapseCamera::saveConfigToFile(const DynamicJsonDocument &doc) {
 
-  // Delete existing file, otherwise the configuration is appended to the file
-  _filesys.remove(_configFilename);
-
-  // Open file for writing
-  File file = _filesys.open(_configFilename, FILE_WRITE);
-  if (!file) {
-    ESP_LOGE(TAG, "Failed to open config file: %s", _configFilename.c_str());
-    return false;
-  }
-
-  if (serializeJson(doc, file) == 0) {
-    ESP_LOGE(TAG, "Failed to serialize to config file: %s", _configFilename.c_str());
-    return false;
-  }
-
-  // Close the file
-  file.close();
-  return true;
-}
-
-DynamicJsonDocument TimeLapseCamera::status() {
-  DynamicJsonDocument doc(JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(30));
-  String json;
-  doc["event"] = "status";
-  JsonObject data = doc.createNestedObject("data");
-  data["freeheap"] = ESP.getFreeHeap();
-  data["datetime"] = timestamp();
-  data["uptime"] = millis();
-  data["charging"] = (digitalRead(_chargePin) == LOW);
-  data["chargingForMs"] = _chargingForMs;
-  data["nImages"] = _nImages;
-  // Use c_str for JSON to avoid copy (also, String doesn't work!)
-  data["firstImage"] = _firstImage.c_str();
-  data["lastImage"] = _lastImage.c_str();
-  data["lastImageUploaded"] = _lastImageUploaded.c_str();
-  data["overWorked"] = _overWorked;
-
-  return doc; // copies
-}
-
-bool TimeLapseCamera::setIfValid(String &value, const char *key, int minLength,
-                                 const DynamicJsonDocument &data) {
-  if (data.containsKey(key)) {
-    String proposedValue = data[key].as<String>();
-    if (proposedValue.length() >= minLength) {
-      if (proposedValue != value) {
-        value = proposedValue;
-        return true;
-      }
-    } else {
-      ESP_LOGW(TAG, "%s: %s is invalid. Ignored", key, value.c_str());
-    }
-  }
-  return false;
-}
-bool TimeLapseCamera::setIfValid(bool &value, const char *key,
-                                 const int &minimum, const int &maximum,
-                                 const DynamicJsonDocument &data) {
-
-  if (data.containsKey(key)) {
-    int proposedValue = data[key].as<int>();
-    if (proposedValue == 0 || proposedValue == 1) {
-      if (proposedValue != value) {
-        value = proposedValue;
-        return true;
-      }
-    } else {
-      ESP_LOGW(TAG, "%s: %d is invalid. Ignored", key, value);
-    }
-  }
-  return false;
-}
-
-bool TimeLapseCamera::setIfValid(int &value, const char *key,
-                                 const int &minimum, const int &maximum,
-                                 const DynamicJsonDocument &data) {
-  if (data.containsKey(key)) {
-    int proposedValue = data[key].as<int>();
-    if (proposedValue >= minimum && proposedValue <= maximum) {
-      if (proposedValue != value) {
-        value = (framesize_t)proposedValue;
-        return true;
-      }
-    } else {
-      ESP_LOGW(TAG, "%s: %d is invalid. Ignored", key, value);
-    }
-  }
-
-  return false;
-}
-
-bool TimeLapseCamera::setIfValid(OffOnAuto &value, const char *key,
-                                 const OffOnAuto &minimum,
-                                 const OffOnAuto &maximum,
-                                 const DynamicJsonDocument &data) {
-  if (data.containsKey(key)) {
-    TimeLapseCamera::OffOnAuto proposedValue =
-        (TimeLapseCamera::OffOnAuto)data[key].as<int>();
-    if (proposedValue >= minimum && proposedValue <= maximum) {
-      if (proposedValue != value) {
-        value = proposedValue;
-        return true;
-      }
-    } else {
-      ESP_LOGW(TAG, "%s: %d is invalid. Ignored", key, value);
-    }
-  }
-
-  return false;
-}
-
-bool TimeLapseCamera::setIfValid(framesize_t &value, const char *key,
-                                 const framesize_t minimum,
-                                 const framesize_t maximum,
-                                 const DynamicJsonDocument &data) {
-
-  if (data.containsKey(key)) {
-    int proposedValue = data[key].as<int>();
-    // ESP_LOGV(TAG,"Frame Set %d key:%s pv:%d min:%d max:%d", (int)value, key,
-    // proposedValue, (int) minimum, (int) maximum);
-    if (proposedValue >= (int)minimum && proposedValue <= (int)maximum) {
-      if ((int)proposedValue != (int)value) {
-        // No change required
-        value = (framesize_t)proposedValue;
-        return true;
-      }
-    } else {
-      ESP_LOGW(TAG, "Frame Set %s: %d is invalid. Ignored", key, value);
-    }
-  }
-  return false;
-}
 
 void TimeLapseCamera::sleep() {
   uint32_t ms = sleepy();
@@ -754,10 +615,10 @@ void TimeLapseCamera::sleep() {
   if (ms < 1000)
     return;
   String m = "Deepsleep for " + String(ms) + "ms";
-  ESP_LOGI(TAG, "%s", m.c_str());
+  ESP_LOGI(TL_TAG, "%s", m.c_str());
   stopTakingPhotos();
   _uploadMode = TimeLapseCamera::Off;
-  ESP_LOGW(TAG, "Close wifi and any other systems! Todo!");
+  ESP_LOGW(TL_TAG, "Close wifi and any other systems! Todo!");
   vTaskDelay(pdMS_TO_TICKS(10000)); // let finish up photos and uploading
   ESP.deepSleep(max((uint32_t)1000, (ms - 10000)) * 1000);
 }
@@ -766,7 +627,7 @@ void TimeLapseCamera::updateFileStats() {
   String localDir = slash("/", _saveFolder, "");
 
   if (!lsStats(localDir, &_nImages, &_firstImage, &_lastImage, ".jpg")) {
-    ESP_LOGE(TAG, "Failed to get lsStats");
+    ESP_LOGE(TL_TAG, "Failed to get lsStats");
   }
 }
 /******************************************************************
@@ -819,7 +680,7 @@ void TakePhotosTask(void *timeLapseCamera) {
   Serial.println(lastWakeTime_Secs); Serial.print("lastWakeTime_Tcks:");
   Serial.println(lastWakeTime_Tcks);
 */
-  ESP_LOGI(TAG, "TakePhotosTask has begun! Period = %ds", tlc->_takePhotoPeriodS);
+  ESP_LOGI(TL_TAG, "TakePhotosTask has begun! Period = %ds", tlc->_takePhotoPeriodS);
 
   int nExceptions = 0;
   for (;;) {
@@ -833,11 +694,11 @@ void TakePhotosTask(void *timeLapseCamera) {
       }
     } catch (const std::runtime_error &e) {
       if (++nExceptions > 10) {
-        ESP_LOGE(TAG, "Too many exceptions. Restarting.");
+        ESP_LOGE(TL_TAG, "Too many exceptions. Restarting.");
         LogFile.print("TakePhotosTask: Too many exceptions. Restarting.");
         ESP.restart();
       } else {
-        ESP_LOGE(TAG, "Exception[%dth]: %s. Retrying.", nExceptions, e.what());
+        ESP_LOGE(TL_TAG, "Exception[%dth]: %s. Retrying.", nExceptions, e.what());
       }
     }
     if (xTaskGetTickCount() >
@@ -858,13 +719,13 @@ void UploadPhotosTask(void *timeLapseCamera) {
   String localDirSlashed;
   String remoteDir;
 
-  ESP_LOGV(TAG, "UploadPhotosTask has begun!");
+  ESP_LOGV(TL_TAG, "UploadPhotosTask has begun!");
   int nExceptions = 0;
   for (;;) {
     //
     // Upload if required
     //
-    // ESP_LOGV(TAG,"Check uploading: charged:%d _uploadMode:%d WiFi:%d",
+    // ESP_LOGV(TL_TAG,"Check uploading: charged:%d _uploadMode:%d WiFi:%d",
     // tlc->isCharged(), tlc->_uploadMode, WiFi.status() == WL_CONNECTED);
     try {
       if ((tlc->_uploadMode == TimeLapseCamera::Auto && tlc->isCharged()) ||
@@ -887,7 +748,7 @@ void UploadPhotosTask(void *timeLapseCamera) {
     } catch (const std::runtime_error &e) {
       nExceptions++;
       if (nExceptions >= 3) {
-        ESP_LOGE(TAG, "Upload failed 3 times. Stopping. %s", e.what());
+        ESP_LOGE(TL_TAG, "Upload failed 3 times. Stopping. %s", e.what());
         LogFile.print("Upload failed 3 times. Stopping. " + String(e.what()));
         tlc->_uploadMode = TimeLapseCamera::Off;
       } else {
@@ -912,7 +773,7 @@ void MonitorTask(void *timeLapseCamera) {
   // to allow users to connect before Wifi.Off or Sleep
   vTaskDelay(60000 / portTICK_PERIOD_MS);
 
-  ESP_LOGV(TAG, "MonitorTask has begun!");
+  ESP_LOGV(TL_TAG, "MonitorTask has begun!");
 
   for (;;) {
     try {
@@ -944,7 +805,7 @@ void MonitorTask(void *timeLapseCamera) {
       vTaskDelay(pdMS_TO_TICKS(5 * 1000)); // wait a bit before checking again
 
     } catch (const std::runtime_error &e) {
-      ESP_LOGE(TAG, "Exception: %s", e.what());
+      ESP_LOGE(TL_TAG, "Exception: %s", e.what());
       LogFile.print("Exception: " + String(e.what()));
     }
 
